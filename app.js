@@ -3,7 +3,6 @@ import morgan from "morgan";
 import cors from "cors";
 import "dotenv/config";
 import contactsRouter from "./routes/index.js";
-import "./server.js";
 
 const app = express();
 
