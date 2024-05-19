@@ -17,29 +17,20 @@ import { checkAuth } from "../middleware/checkAuth.js";
 
 const contactsRouter = express.Router();
 
-contactsRouter.get("/", checkAuth, getAllContacts);
+contactsRouter.use(checkAuth);
 
-contactsRouter.get("/:id", checkAuth, getOneContact);
+contactsRouter.get("/", getAllContacts);
 
-contactsRouter.delete("/:id", checkAuth, deleteContact);
+contactsRouter.get("/:id", getOneContact);
 
-contactsRouter.post(
-  "/",
-  checkAuth,
-  validateBody(createContactSchema),
-  createContact
-);
+contactsRouter.delete("/:id", deleteContact);
 
-contactsRouter.put(
-  "/:id",
-  checkAuth,
-  validateBody(updateContactSchema),
-  updateContact
-);
+contactsRouter.post("/", validateBody(createContactSchema), createContact);
+
+contactsRouter.put("/:id", validateBody(updateContactSchema), updateContact);
 
 contactsRouter.patch(
   "/:id/favorite",
-  checkAuth,
   validateBody(updateContactFavoriteSchema),
   updateFavoriteContact
 );

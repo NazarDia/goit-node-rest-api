@@ -6,17 +6,14 @@ import bcrypt from "bcrypt";
 
 export const register = errorWrapper(async (req, res, next) => {
   const { email, password } = req.body;
-  const emailLowerCase = email.toLowerCase();
-  const user = await User.findOne({ email: emailLowerCase });
+  const user = await User.findOne({ email });
 
-  if (user) {
-    throw HttpError(409, "Email in use");
-  }
+  user && next(HttpError(409, "Email in use"));
 
   const passHash = await bcrypt.hash(password, 10);
 
   const newUser = await User.create({
-    email: emailLowerCase,
+    email,
     password: passHash,
   });
 
@@ -27,21 +24,16 @@ export const register = errorWrapper(async (req, res, next) => {
 
 export const login = errorWrapper(async (req, res, next) => {
   const { email, password } = req.body;
-  const emailLowerCase = email.toLowerCase();
-  const user = await User.findOne({ email: emailLowerCase });
+  const user = await User.findOne({ email });
 
-  if (!user) {
-    throw HttpError(401, "Email or password is wrong");
-  }
+  !user && next(HttpError(401, "Email or password is wrong"));
 
   const isCompare = await bcrypt.compare(password, user.password);
 
-  if (!isCompare) {
-    throw HttpError(401, "Email or password is wrong");
-  }
+  !isCompare && next(HttpError(401, "Email or password is wrong"));
 
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: 3600,
+    expiresIn: "7 days",
   });
 
   await User.findByIdAndUpdate(user._id, { token });
