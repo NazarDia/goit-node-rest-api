@@ -5,24 +5,16 @@ import HttpError from "../helpers/HttpError.js";
 export const checkAuth = async (req, _, next) => {
   try {
     const authHeader = req.headers.authorization;
-    !authHeader && next(HttpError(401));
+    if (!authHeader) throw HttpError(401);
 
     const [bearer, token] = authHeader.split(" ");
-    bearer !== "Bearer" && next(HttpError(401));
+    if (bearer !== "Bearer") throw HttpError(401);
 
     jwt.verify(token, process.env.JWT_SECRET, async (err, decode) => {
-      if (err || !decode) {
-        // Проверяем наличие ошибки или отсутствие decode
-        next(HttpError(401));
-        return; // Выходим из функции, чтобы предотвратить дальнейшие действия
-      }
+      if (err || !decode) throw HttpError(401);
 
       const user = await User.findById(decode.id);
-      !user || user.token !== token ? next(HttpError(401)) : null;
-
-      !user._id || !user.email || !user.subscription
-        ? next(HttpError(401))
-        : null;
+      if (!user || user.token !== token) throw HttpError(401);
 
       req.user = {
         id: user._id,
