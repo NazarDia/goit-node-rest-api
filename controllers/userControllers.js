@@ -8,7 +8,7 @@ export const register = errorWrapper(async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
 
-  user && next(HttpError(409, "Email in use"));
+  if (user) throw HttpError(409, "Email in use");
 
   const passHash = await bcrypt.hash(password, 10);
 
@@ -26,11 +26,11 @@ export const login = errorWrapper(async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
 
-  !user && next(HttpError(401, "Email or password is wrong"));
+  if (!user) throw HttpError(401, "Email or password is wrong");
 
   const isCompare = await bcrypt.compare(password, user.password);
 
-  !isCompare && next(HttpError(401, "Email or password is wrong"));
+  if (!isCompare) throw HttpError(401, "Email or password is wrong");
 
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "7 days",

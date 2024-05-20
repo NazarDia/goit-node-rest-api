@@ -19,9 +19,7 @@ export const getOneContact = errorWrapper(async (req, res, next) => {
     "owner",
     "_id name email subscription"
   );
-  if (!result) {
-    throw HttpError(404);
-  }
+  if (!result) throw HttpError(404);
   res.status(200).json(result);
 });
 
@@ -30,9 +28,7 @@ export const deleteContact = errorWrapper(async (req, res, next) => {
   const { id: userId } = req.user;
 
   const result = await Contact.findOneAndDelete({ _id: id, owner: userId });
-  if (!result) {
-    throw HttpError(404);
-  }
+  if (!result) throw HttpError(404);
   res.status(200).json(result);
 });
 
@@ -51,9 +47,7 @@ export const updateContact = errorWrapper(async (req, res, next) => {
     req.body,
     { new: true }
   );
-  if (!result) {
-    throw HttpError(404);
-  }
+  if (!result) throw HttpError(404);
   res.status(200).json(result);
 });
 
@@ -68,9 +62,7 @@ export const updateFavoriteContact = errorWrapper(async (req, res, next) => {
     { new: true }
   );
 
-  if (!result) {
-    throw HttpError(404);
-  }
+  if (!result) throw HttpError(404);
 
   res.status(200).json(result);
 });
