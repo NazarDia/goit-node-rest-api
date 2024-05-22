@@ -1,12 +1,18 @@
 import express from "express";
 import validateBody from "../helpers/validateBody.js";
-import { registerUserSchema, loginUserSchema } from "../schemas/userSchemas.js";
+import {
+  registerUserSchema,
+  loginUserSchema,
+  emailSchema,
+} from "../schemas/userSchemas.js";
 import {
   register,
   login,
   logout,
   getCurrent,
   uploadAvatar,
+  verifyUser,
+  newVerifyEmail,
 } from "../controllers/userControllers.js";
 import { checkAuth } from "../middleware/checkAuth.js";
 import uploadMiddleware from "../middleware/upload.js";
@@ -23,5 +29,9 @@ userRouter.patch(
   uploadMiddleware.single("avatar"),
   uploadAvatar
 );
+
+userRouter.get("/verify/:verificationToken", verifyUser);
+
+userRouter.post("/verify", validateBody(emailSchema), newVerifyEmail);
 
 export default userRouter;

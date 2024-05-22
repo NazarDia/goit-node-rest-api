@@ -7,6 +7,8 @@ import gravatar from "gravatar";
 import * as fs from "node:fs/promises";
 import path from "node:path";
 import Jimp from "jimp";
+import { sendEmail } from "../helpers/sendEmail.js";
+import { nanoid } from "nanoid";
 
 export const register = errorWrapper(async (req, res, next) => {
   const { email, password } = req.body;
@@ -16,17 +18,27 @@ export const register = errorWrapper(async (req, res, next) => {
 
   const passHash = await bcrypt.hash(password, 10);
   const avatar = gravatar.url(req.body.email);
+  const verificationToken = nanoid();
 
   const newUser = await User.create({
     email,
     password: passHash,
     avatarURL: avatar,
+    verificationToken,
   });
+
+  const verifyEmail = {
+    to: email,
+    subject: "Verify email",
+    html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${verificationToken}"> Click here to verify email</a>`,
+  };
+  await sendEmail(verifyEmail);
 
   res.status(201).json({
     email: newUser.email,
     subscription: newUser.subscription,
     avatarURL: avatar,
+    message: "User registered successfully!",
   });
 });
 
@@ -84,6 +96,45 @@ export const uploadAvatar = errorWrapper(async (req, res, next) => {
     );
 
     res.status(200).json({ avatarURL: result.avatarURL });
+  } catch (error) {
+    next(error);
+  }
+});
+export const verifyUser = errorWrapper(async (req, res) => {
+  try {
+    const { verificationToken } = req.params;
+    const user = await User.findOne({ verificationToken });
+
+    if (!user) throw res.status(404).json({ message: "User not found" });
+
+    await User.findByIdAndUpdate(user._id, {
+      verify: true,
+      verificationToken: null,
+    });
+
+    res.status(200).json({ message: "Verification successful" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
+export const newVerifyEmail = errorWrapper(async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) throw HttpError(400, "missing required field email");
+
+    if (user.verify)
+      throw HttpError(400, "Verification has already been passed");
+
+    const verifyEmail = {
+      to: email,
+      subject: "Verify email",
+      html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${user.verificationToken}"> Click here to verify email</a>`,
+    };
+    await sendEmail(verifyEmail);
+
+    res.status(200).json({ message: "Verification email sent" });
   } catch (error) {
     next(error);
   }
