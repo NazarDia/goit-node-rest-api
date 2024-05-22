@@ -10,6 +10,8 @@ import Jimp from "jimp";
 import { sendEmail } from "../helpers/sendEmail.js";
 import { nanoid } from "nanoid";
 
+const { BASE_URL } = process.env;
+
 export const register = errorWrapper(async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
@@ -30,7 +32,7 @@ export const register = errorWrapper(async (req, res, next) => {
   const verifyEmail = {
     to: email,
     subject: "Verify email",
-    html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${verificationToken}"> Click here to verify email</a>`,
+    html: `<a target="_blank" href="${BASE_URL}/users/verify/${verificationToken}"> Click here to verify email</a>`,
   };
   await sendEmail(verifyEmail);
 
@@ -130,7 +132,7 @@ export const newVerifyEmail = errorWrapper(async (req, res, next) => {
     const verifyEmail = {
       to: email,
       subject: "Verify email",
-      html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${user.verificationToken}"> Click here to verify email</a>`,
+      html: `<a target="_blank" href="${BASE_URL}/users/verify/${user.verificationToken}"> Click here to verify email</a>`,
     };
     await sendEmail(verifyEmail);
 
