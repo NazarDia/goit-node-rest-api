@@ -77,67 +77,53 @@ export const getCurrent = errorWrapper(async (req, res, next) => {
 });
 
 export const uploadAvatar = errorWrapper(async (req, res, next) => {
-  try {
-    const { path: tempPath, filename } = req.file;
-    const tempFilePath = path.resolve(tempPath);
-    const outputDir = path.resolve("public/avatars");
-    const outputFilePath = path.join(outputDir, filename);
+  const { path: tempPath, filename } = req.file;
+  const tempFilePath = path.resolve(tempPath);
+  const outputDir = path.resolve("public/avatars");
+  const outputFilePath = path.join(outputDir, filename);
 
-    const image = await Jimp.read(tempFilePath);
-    await image.resize(250, 250).writeAsync(tempFilePath);
+  const image = await Jimp.read(tempFilePath);
+  await image.resize(250, 250).writeAsync(tempFilePath);
 
-    await fs.mkdir(outputDir, { recursive: true });
+  await fs.mkdir(outputDir, { recursive: true });
 
-    await fs.rename(tempFilePath, outputFilePath);
+  await fs.rename(tempFilePath, outputFilePath);
 
-    const avatarURL = `${filename}`;
-    const result = await User.findByIdAndUpdate(
-      req.user.id,
-      { avatarURL },
-      { new: true }
-    );
+  const avatarURL = `${filename}`;
+  const result = await User.findByIdAndUpdate(
+    req.user.id,
+    { avatarURL },
+    { new: true }
+  );
 
-    res.status(200).json({ avatarURL: result.avatarURL });
-  } catch (error) {
-    next(error);
-  }
+  res.status(200).json({ avatarURL: result.avatarURL });
 });
 export const verifyUser = errorWrapper(async (req, res) => {
-  try {
-    const { verificationToken } = req.params;
-    const user = await User.findOne({ verificationToken });
+  const { verificationToken } = req.params;
+  const user = await User.findOne({ verificationToken });
 
-    if (!user) throw res.status(404).json({ message: "User not found" });
+  if (!user) throw res.status(404).json({ message: "User not found" });
 
-    await User.findByIdAndUpdate(user._id, {
-      verify: true,
-      verificationToken: null,
-    });
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    verificationToken: null,
+  });
 
-    res.status(200).json({ message: "Verification successful" });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error });
-  }
+  res.status(200).json({ message: "Verification successful" });
 });
 
 export const newVerifyEmail = errorWrapper(async (req, res, next) => {
-  try {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) throw HttpError(400, "missing required field email");
+  const { email } = req.body;
+  const user = await User.findOne({ email });
 
-    if (user.verify)
-      throw HttpError(400, "Verification has already been passed");
+  if (user.verify) throw HttpError(400, "Verification has already been passed");
 
-    const verifyEmail = {
-      to: email,
-      subject: "Verify email",
-      html: `<a target="_blank" href="${BASE_URL}/users/verify/${user.verificationToken}"> Click here to verify email</a>`,
-    };
-    await sendEmail(verifyEmail);
+  const verifyEmail = {
+    to: email,
+    subject: "Verify email",
+    html: `<a target="_blank" href="${BASE_URL}/users/verify/${user.verificationToken}"> Click here to verify email</a>`,
+  };
+  await sendEmail(verifyEmail);
 
-    res.status(200).json({ message: "Verification email sent" });
-  } catch (error) {
-    next(error);
-  }
+  res.status(200).json({ message: "Verification email sent" });
 });
