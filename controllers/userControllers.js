@@ -54,6 +54,12 @@ export const login = errorWrapper(async (req, res, next) => {
 
   if (!isCompare) throw HttpError(401, "Email or password is wrong");
 
+  if (!user.verify)
+    throw HttpError(
+      403,
+      "User not verified. Please check your email to verify your account."
+    );
+
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "7 days",
   });
