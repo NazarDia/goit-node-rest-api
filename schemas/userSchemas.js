@@ -26,3 +26,7 @@ export const loginUserSchema = Joi.object({
     .required()
     .messages({ "any.required": "Missing required field: password" }),
 });
+
+export const emailSchema = Joi.object({
+  email: Joi.string().email().required(),
+});
